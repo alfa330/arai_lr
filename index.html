@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Руслану чмоки - История взросления в Америке</title>
+    <title>Возвращение домой - История взросления в Америке</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
             margin: 0;
@@ -21,6 +22,7 @@
             --dark: #2c3e50;
             --text: #333;
             --transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
         
         html {
@@ -32,6 +34,12 @@
             color: var(--text);
             line-height: 1.7;
             overflow-x: hidden;
+            transition: background-color 0.5s, color 0.5s;
+        }
+        
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
         }
         
         /* Навигация по главам */
@@ -47,12 +55,13 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 15px 10px;
             border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: none;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
         }
         
-        .chapter-nav.active {
-            display: flex;
+        .dark-mode .chapter-nav {
+            background: rgba(40, 44, 52, 0.9);
         }
         
         .chapter-dot {
@@ -89,6 +98,35 @@
         
         .chapter-dot:hover::after {
             opacity: 1;
+        }
+        
+        /* Кнопка темы */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+        
+        .dark-mode .theme-toggle {
+            background: rgba(40, 44, 52, 0.9);
+            color: #fff;
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(30deg);
         }
         
         /* Заголовок */
@@ -174,6 +212,7 @@
             opacity: 0;
             transform: translateY(50px);
             transition: var(--transition);
+            position: relative;
         }
         
         .chapter.active {
@@ -197,6 +236,10 @@
             color: var(--primary);
             position: relative;
             padding-bottom: 15px;
+        }
+        
+        .dark-mode .chapter-title {
+            color: #e0e0e0;
         }
         
         .chapter-title::after {
@@ -235,11 +278,12 @@
         .chapter-content p:nth-child(7) { transition-delay: 1.3s; }
         .chapter-content p:nth-child(8) { transition-delay: 1.5s; }
         
+        /* Интерактивные изображения */
         .image-container {
             margin: 40px 0;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             position: relative;
             height: 400px;
             background-color: #ddd;
@@ -247,6 +291,17 @@
             justify-content: center;
             align-items: center;
             color: #777;
+            cursor: pointer;
+            transition: transform 0.5s;
+        }
+        
+        .dark-mode .image-container {
+            background-color: #333;
+            color: #aaa;
+        }
+        
+        .image-container:hover {
+            transform: scale(1.02);
         }
         
         .image-container::before {
@@ -255,15 +310,43 @@
             padding: 20px;
         }
         
-        .chapter-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.8s;
+        .image-container.zoomed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2000;
+            margin: 0;
+            border-radius: 0;
+            cursor: zoom-out;
         }
         
-        .image-container:hover .chapter-image {
-            transform: scale(1.05);
+        .image-container.zoomed::before {
+            display: none;
+        }
+        
+        .image-zoom-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: var(--transition);
+        }
+        
+        .image-zoom-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
         }
         
         /* Футер */
@@ -273,6 +356,10 @@
             text-align: center;
             padding: 60px 20px;
             margin-top: 50px;
+        }
+        
+        .dark-mode .footer {
+            background-color: #1a1a1a;
         }
         
         .footer-content {
@@ -343,8 +430,13 @@
             background: rgba(255, 255, 255, 0.95);
             padding: 10px 20px;
             border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dark-mode .mobile-nav {
+            background: rgba(40, 44, 52, 0.95);
         }
         
         .mobile-nav select {
@@ -355,6 +447,406 @@
             padding: 5px;
             outline: none;
             width: 200px;
+        }
+        
+        .dark-mode .mobile-nav select {
+            color: #e0e0e0;
+        }
+        
+        /* Цитаты в тексте */
+        .quote-in-text {
+            border-left: 4px solid var(--secondary);
+            padding-left: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            color: #555;
+            font-size: 1.1rem;
+            position: relative;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .dark-mode .quote-in-text {
+            color: #bbb;
+        }
+        
+        .quote-in-text:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .quote-in-text::after {
+            content: '🔊';
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .quote-in-text:hover::after {
+            opacity: 0.5;
+        }
+        
+        /* Выделение мыслей */
+        .thought {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .dark-mode .thought {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+        
+        .thought:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .thought::before {
+            content: '💭';
+            position: absolute;
+            left: -15px;
+            top: -15px;
+            background: var(--secondary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        /* Заметки на полях */
+        .note {
+            background-color: #fff9e6;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.95rem;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .dark-mode .note {
+            background-color: #2d2a22;
+        }
+        
+        .note:hover {
+            transform: translateX(5px);
+        }
+        
+        .note::before {
+            content: '📌';
+            position: absolute;
+            left: -10px;
+            top: -10px;
+        }
+        
+        /* Интерактивная карта */
+        .interactive-map {
+            height: 400px;
+            margin: 40px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Временная шкала */
+        .timeline {
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--secondary);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 60px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .timeline-item:hover {
+            transform: translateX(10px);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            border: 3px solid white;
+            z-index: 1;
+        }
+        
+        .dark-mode .timeline-item::before {
+            border-color: #121212;
+        }
+        
+        .timeline-time {
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        
+        .timeline-content {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .dark-mode .timeline-content {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+        
+        /* Интерактивный словарь */
+        .dictionary-term {
+            color: var(--secondary);
+            border-bottom: 1px dashed var(--secondary);
+            cursor: help;
+            position: relative;
+        }
+        
+        .dictionary-term:hover::after {
+            content: attr(data-definition);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+            font-size: 0.9rem;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            pointer-events: none;
+        }
+        
+        /* Кнопка "Наверх" */
+        .back-to-top {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            background-color: var(--primary);
+        }
+        
+        /* Звуковые эффекты */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 140px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+        
+        .dark-mode .sound-toggle {
+            background: rgba(40, 44, 52, 0.9);
+            color: #fff;
+        }
+        
+        .sound-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .sound-toggle.muted {
+            opacity: 0.5;
+        }
+        
+        /* Счетчик чтения */
+        .reading-progress {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dark-mode .reading-progress {
+            background: rgba(40, 44, 52, 0.9);
+            color: #fff;
+        }
+        
+        /* Интерактивные персонажи */
+        .character-card {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .dark-mode .character-card {
+            background-color: rgba(40, 44, 52, 0.9);
+        }
+        
+        .character-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .dark-mode .character-avatar {
+            background-color: #555;
+        }
+        
+        .character-info h3 {
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .dark-mode .character-info h3 {
+            color: #e0e0e0;
+        }
+        
+        .character-info p {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 0;
+        }
+        
+        .dark-mode .character-info p {
+            color: #aaa;
+        }
+        
+        /* Диалоговое окно */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        
+        .dark-mode .modal-content {
+            background-color: #2c3e50;
+            color: #e0e0e0;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .dark-mode .modal-close {
+            color: #aaa;
         }
         
         @media (max-width: 768px) {
@@ -377,41 +869,49 @@
             .image-container {
                 height: 250px;
             }
+            
+            .theme-toggle, .sound-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+            }
+            
+            .sound-toggle {
+                right: 60px;
+            }
+            
+            .reading-progress {
+                left: 10px;
+                bottom: 10px;
+                font-size: 0.8rem;
+                padding: 8px 12px;
+            }
         }
         
-        /* Цитаты в тексте */
-        .quote-in-text {
-            border-left: 4px solid var(--secondary);
-            padding-left: 20px;
-            margin: 30px 0;
-            font-style: italic;
-            color: #555;
-            font-size: 1.1rem;
+        /* Выделение текста */
+        ::selection {
+            background-color: rgba(52, 152, 219, 0.3);
         }
         
-        /* Выделение мыслей */
-        .thought {
-            background-color: rgba(52, 152, 219, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid var(--secondary);
-        }
-        
-        /* Заметки на полях */
-        .note {
-            background-color: #fff9e6;
-            border-left: 4px solid #f1c40f;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 10px 10px 0;
-            font-size: 0.95rem;
+        .dark-mode ::selection {
+            background-color: rgba(52, 152, 219, 0.5);
         }
     </style>
 </head>
 <body>
     <!-- Прогресс-бар -->
     <div class="progress-bar" id="progressBar"></div>
+    
+    <!-- Кнопка темы -->
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    
+    <!-- Кнопка звука -->
+    <button class="sound-toggle" id="soundToggle">
+        <i class="fas fa-volume-up" id="soundIcon"></i>
+    </button>
     
     <!-- Навигация по главам (боковая) -->
     <div class="chapter-nav" id="chapterNav">
@@ -421,8 +921,16 @@
         <div class="chapter-dot" data-chapter="Глава 3" onclick="scrollToChapter(3)"></div>
         <div class="chapter-dot" data-chapter="Глава 4" onclick="scrollToChapter(4)"></div>
         <div class="chapter-dot" data-chapter="Глава 5" onclick="scrollToChapter(5)"></div>
-        <div class="chapter-dot" data-chapter="Завершение" onclick="scrollToChapter(6)"></div>
+        <div class="chapter-dot" data-chapter="Карта" onclick="scrollToChapter(6)"></div>
+        <div class="chapter-dot" data-chapter="Персонажи" onclick="scrollToChapter(7)"></div>
+        <div class="chapter-dot" data-chapter="Завершение" onclick="scrollToChapter(8)"></div>
     </div>
+    
+    <!-- Кнопка "Наверх" -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fas fa-chevron-up"></i>
+    </div>
+    
     
     <!-- Мобильная навигация -->
     <div class="mobile-nav">
@@ -433,8 +941,21 @@
             <option value="3">Глава 3: Аэропорт и отмена рейса</option>
             <option value="4">Глава 4: Финальный рывок домой</option>
             <option value="5">Глава 5: Осознание и взросление</option>
-            <option value="6">Завершение</option>
+            <option value="6">Интерактивная карта</option>
+            <option value="7">Персонажи истории</option>
+            <option value="8">Завершение</option>
         </select>
+    </div>
+    
+    <!-- Диалоговое окно -->
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <h2 id="modalTitle">Информация</h2>
+            <div id="modalContent">
+                <p>Здесь будет отображаться дополнительная информация.</p>
+            </div>
+        </div>
     </div>
     
     <!-- Заголовок -->
@@ -442,8 +963,19 @@
         <div class="header-content">
             <h1 class="title">Возвращение домой</h1>
             <p class="subtitle">История о взрослении, страхе и человеческой доброте в далёкой Америке</p>
-            <div class="note" style="max-width: 600px; margin: 40px auto 0; background: rgba(255,255,255,0.2); border-left-color: white;">
-                <p>Эта история основана на реальных событиях, произошедших с Карлыгаш во время её работы в США. Имена некоторых персонажей изменены.</p>
+            <div class="note" style="max-width: 600px; margin: 40px auto 0; background: rgba(255,255,255,0.2); border-left-color: white; color: white;">
+                <p>Данная история посвящена личному опыту девушки по имени Карлыгаш, которая с подросткового возраста мечтала о поездке в США. Реализовав свою мечту, она оказалась в Америке, где совмещала работу и обучение. Однако в процессе адаптации к новой социальной и культурной среде Карлыгаш столкнулась с ситуацией потери ориентации в незнакомом городе, что стало отправной точкой для последующей череды кризисных событий.
+
+Повествование выстроено в форме личного нарратива от первого лица — от имени Карлыгаш, что позволяет отразить не только хронологию происходящих событий, но и внутреннее эмоциональное состояние героини в условиях неопределённости и стресса.</p>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                <button id="startReading" style="background: var(--secondary); color: white; border: none; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-size: 1rem; transition: var(--transition);">
+                    <i class="fas fa-play" style="margin-right: 8px;"></i> Начать чтение
+                </button>
+                <button id="exploreCharacters" style="background: transparent; color: white; border: 2px solid white; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-size: 1rem; transition: var(--transition);">
+                    <i class="fas fa-users" style="margin-right: 8px;"></i> Персонажи
+                </button>
             </div>
         </div>
         
@@ -458,18 +990,38 @@
         <span class="chapter-number">Глава 1</span>
         <h2 class="chapter-title">Далёкая остановка и пустые улицы</h2>
         
-        <div class="image-container" data-image-path="images/chapter1-bus-stop.jpg">
+        <!-- Временная шкала для главы -->
+        <div class="timeline">
+            <div class="timeline-item" onclick="showModal('Вечер', 'Я стояла на остановке, почти в полном одиночестве. Вокруг — пустые улицы американского городка, где я работала этим летом, Рехобот-Бич.')">
+                <div class="timeline-time">Вечер</div>
+                <div class="timeline-content">Прибытие на остановку в Рехобот-Бич</div>
+            </div>
+            <div class="timeline-item" onclick="showModal('21:00', 'Я обнаружила, что последний автобус ушёл в 18:00. Следующий — только завтра утром.')">
+                <div class="timeline-time">21:00</div>
+                <div class="timeline-content">Обнаружение, что автобусы уже не ходят</div>
+            </div>
+            <div class="timeline-item" onclick="showModal('21:15', 'Появились двое молодых мужчин, предложившие помощь. Это вызвало страх и тревогу.')">
+                <div class="timeline-time">21:15</div>
+                <div class="timeline-content">Встреча с незнакомцами на остановке</div>
+            </div>
+        </div>
+        
+        <div class="image-container" data-image-path="images/chapter1-bus-stop.jpg" id="image1">
+            <button class="image-zoom-btn" onclick="toggleZoom('image1')">
+                <i class="fas fa-search-plus"></i>
+            </button>
             <!-- Здесь будет изображение -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <i class="fas fa-bus" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
                 <p>Изображение: Остановка в Рехобот-Бич вечером</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
             </div>
         </div>
         
         <div class="chapter-content">
-            <p>Я стояла на остановке, почти в полном одиночестве. Вокруг — пустые улицы американского городка, где я работала этим летом, Рехобот-Бич. Вечер. Каскад фонарей отбрасывал свет на тротуар, но он едва пробивал тьму вокруг. Холодный ветер подгонял меня к краю платформы, и я начала ощущать настоящую растерянность.</p>
+            <p>Я стояла на остановке, почти в полном одиночестве. Вокруг — пустые улицы <span class="dictionary-term" data-definition="Рехобот-Бич — небольшой курортный город в Делавэре, США, популярный среди студентов, работающих летом по программе Work and Travel.">Рехобот-Бич</span>. Вечер. Каскад фонарей отбрасывал свет на тротуар, но он едва пробивал тьму вокруг. Холодный ветер подгонял меня к краю платформы, и я начала ощущать настоящую растерянность.</p>
             
-            <div class="thought">
+            <div class="thought" onclick="playThoughtSound('thought1')">
                 <p>«Да ладно, я всего лишь выйду на автобус и поеду домой… Это же так просто!» — думала я.</p>
             </div>
             
@@ -484,6 +1036,10 @@
             <p>Прошло ещё несколько минут. Я размышляла: «Тааак, Карлыгаш, ты столько всего пережила этим летом, работала, ездила, говорила на английском… и теперь что, вот это твой кризис?» — пыталась я себя утешить, но страх и растерянность не отпускали.</p>
             
             <p>Я вспомнила, что могу обратиться к знакомым, но их телефон сейчас недоступен. Я уже чувствовала, что каждая секунда растёт в панику. И тогда я решилась: беру телефон, начинаю искать все контакты людей, которых знаю в городе.</p>
+            
+            <div class="note" onclick="showModal('Совет путешественникам', 'Всегда проверяйте расписание общественного транспорта заранее, особенно в незнакомом городе. Сохраняйте номера экстренных служб и контакты знакомых в доступном месте.')">
+                <p><strong>Совет путешественникам:</strong> Всегда проверяйте расписание общественного транспорта заранее, особенно в незнакомом городе.</p>
+            </div>
         </div>
     </section>
     
@@ -492,18 +1048,22 @@
         <span class="chapter-number">Глава 2</span>
         <h2 class="chapter-title">Мексиканская семья и Арайлым</h2>
         
-        <div class="image-container" data-image-path="images/chapter2-phone.jpg">
+        <div class="image-container" data-image-path="images/chapter2-phone.jpg" id="image2">
+            <button class="image-zoom-btn" onclick="toggleZoom('image2')">
+                <i class="fas fa-search-plus"></i>
+            </button>
             <!-- Здесь будет изображение -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <i class="fas fa-mobile-alt" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
                 <p>Изображение: Телефон с сообщениями о помощи</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
             </div>
         </div>
         
         <div class="chapter-content">
-            <p>Телефон в руке дрожал так же, как и мои пальцы. Я набирала знакомые номера, надеясь на чудо. Первым откликнулся мексиканский семейный коллектив, с которыми я работала этим летом:</p>
+            <p>Телефон в руке дрожал так же, как и мои пальцы. Я набирала знакомые номера, надеясь на чудо. Первым откликнулся <span class="dictionary-term" data-definition="Многие студенты по программе Work and Travel работают вместе с мексиканскими семьями в сфере обслуживания в США.">мексиканский семейный коллектив</span>, с которыми я работала этим летом:</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote1')">
                 <p>— Приходи к нам, — сказали они. — Нам будет приятно, если ты переночу у нас.</p>
             </div>
             
@@ -513,7 +1073,7 @@
             
             <p>Её ответ пришёл почти мгновенно:</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote2')">
                 <p>— Көөөз, я могу спросить одного моего русского друга, возможно, он поможет. Но он возьмет деньги.</p>
             </div>
             
@@ -521,13 +1081,17 @@
             
             <p>Арайлым предложила:</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote3')">
                 <p>— За 45 долларов мы можем тебя забрать.</p>
             </div>
             
             <p>Я улыбнулась, хотя сама едва могла поверить, что это реально: 45 долларов за спасение от ночной улицы в Америке. Сердце постепенно успокаивалось, паника смягчалась, а чувство облегчения растягивалось внутри меня.</p>
             
             <p>Но это был только первый шаг. Надо было дойти до того места, где мы должны были встретиться. И тут я вспомнила, что мне ещё предстоит долго и мучительно двигаться по городу, чтобы добраться до безопасного места.</p>
+            
+            <div class="thought" onclick="playThoughtSound('thought2')">
+                <p>45 долларов — это много или мало за спасение в чужой стране? В тот момент это была любая цена за безопасность.</p>
+            </div>
         </div>
     </section>
     
@@ -536,11 +1100,15 @@
         <span class="chapter-number">Глава 3</span>
         <h2 class="chapter-title">Аэропорт, отмена рейса и неожиданная помощь</h2>
         
-        <div class="image-container" data-image-path="images/chapter3-airport.jpg">
+        <div class="image-container" data-image-path="images/chapter3-airport.jpg" id="image3">
+            <button class="image-zoom-btn" onclick="toggleZoom('image3')">
+                <i class="fas fa-search-plus"></i>
+            </button>
             <!-- Здесь будет изображение -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <i class="fas fa-plane" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
                 <p>Изображение: Аэропорт Нью-Йорка с табло отмен рейсов</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
             </div>
         </div>
         
@@ -551,13 +1119,13 @@
             
             <p>И тут удар — табло показало: «РЕЙС ОТМЕНЕН».</p>
             
-            <div class="thought">
+            <div class="thought" onclick="playThoughtSound('thought3')">
                 <p>Я замерла. На мгновение закружилась голова. Вокруг — шум людей, объявления о других рейсах, но меня это не касалось.</p>
             </div>
             
             <p>Я подошла к кассе и едва выдавила:</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote4')">
                 <p>— Следующий рейс?</p>
                 <p>— Завтра, в 16:10, — сказала кассир.</p>
             </div>
@@ -566,13 +1134,17 @@
             
             <p>И тут я вспомнила украинскую женщину, с которой познакомилась раньше в Рехобот-Бич. Она говорила: «Если будешь в Нью-Йорке и нужна помощь — пиши». Я набрала ей, объяснила ситуацию.</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote5')">
                 <p>— Конечно, приезжай, — ответила она, присылая адрес.</p>
             </div>
             
             <p>И снова облегчение, смешанное с лёгкой тревогой: ехать ночью через незнакомый город к чужому дому, где меня ждёт женщина, с которой я едва знакома. Но вариантов не было.</p>
             
             <p>Дорога заняла около 3,5 часов. Я вышла к её дому поздно вечером. Они встретили меня с улыбкой, предложили чай, показали комнату, где я могла переночевать. Атмосфера была тёплой, но странной для меня: чужой город, чужие люди, а я одна, но всё же безопасно. Мы пошли вечером прогуляться по ближайшему парку, и впервые за сутки я почувствовала, что могу дышать спокойно.</p>
+            
+            <div class="note" onclick="showModal('Культурный момент', 'Гостеприимство выходцев из постсоветских стран за рубежом часто становится спасательным кругом для путешественников в сложных ситуациях. Общительность и готовность помочь землякам — отличительная черта таких сообществ.')">
+                <p><strong>Культурный момент:</strong> Гостеприимство выходцев из постсоветских стран за рубежом часто становится спасательным кругом для путешественников.</p>
+            </div>
         </div>
     </section>
     
@@ -581,11 +1153,15 @@
         <span class="chapter-number">Глава 4</span>
         <h2 class="chapter-title">Раннее утро, метро и финальный рывок домой</h2>
         
-        <div class="image-container" data-image-path="images/chapter4-subway.jpg">
+        <div class="image-container" data-image-path="images/chapter4-subway.jpg" id="image4">
+            <button class="image-zoom-btn" onclick="toggleZoom('image4')">
+                <i class="fas fa-search-plus"></i>
+            </button>
             <!-- Здесь будет изображение -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <i class="fas fa-subway" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
                 <p>Изображение: Метро Нью-Йорка рано утром</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
             </div>
         </div>
         
@@ -598,11 +1174,15 @@
             
             <p>К 3:30 я достигла терминала. Это был огромный аэропорт — длинные коридоры, шумные очереди, табло, электронные информационные панели. Я встала в очередь на регистрацию и ощутила знакомое волнение: сердце колотилось, а в голове мелькали все события последних дней: пустая остановка, темнота, два странных парня, помощь Арайлым, мексиканская семья, ночь у украинской женщины.</p>
             
-            <div class="note">
+            <div class="note" onclick="showModal('Момент истины', 'Это был момент истины — если что-то пойдёт не так сейчас, все предыдущие усилия окажутся напрасными. Но именно такие ситуации закаляют характер и учат ценить простые вещи.')">
                 <p>Это был момент истины — если что-то пойдёт не так сейчас, все предыдущие усилия окажутся напрасными.</p>
             </div>
             
             <p>На этот раз всё прошло гладко. Я села в самолёт, сердце постепенно успокаивалось. Я осознала, что пережила несколько дней полного хаоса, паники, усталости и голода, и всё же справилась.</p>
+            
+            <div class="thought" onclick="playThoughtSound('thought4')">
+                <p>Я сделала это. После всех испытаний я всё же сажусь в самолёт, который отвезёт меня домой. Это невероятное чувство — преодоления.</p>
+            </div>
         </div>
     </section>
     
@@ -611,11 +1191,15 @@
         <span class="chapter-number">Глава 5</span>
         <h2 class="chapter-title">Осознание и взросление</h2>
         
-        <div class="image-container" data-image-path="images/chapter5-plane-window.jpg">
+        <div class="image-container" data-image-path="images/chapter5-plane-window.jpg" id="image5">
+            <button class="image-zoom-btn" onclick="toggleZoom('image5')">
+                <i class="fas fa-search-plus"></i>
+            </button>
             <!-- Здесь будет изображение -->
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <i class="fas fa-plane-departure" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
                 <p>Изображение: Вид из иллюминатора самолёта</p>
+                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
             </div>
         </div>
         
@@ -624,7 +1208,7 @@
             
             <p>Каждая деталь — до самых пальцев ног, каждый запах, шум, каждый человек, с которым я говорила, остались в моей памяти. Я вспоминала, как дрожали руки, как сердце колотилось, как хотелось плакать прямо на улице, как страх переполнял всё тело. Но теперь я понимала: это были уроки взросления.</p>
             
-            <div class="thought">
+            <div class="thought" onclick="playThoughtSound('thought5')">
                 <p>Я больше не та Карлыгаш, что стояла растерянная на остановке. Я научилась проверять маршруты, заранее готовиться, не бояться ошибок и просить помощи, когда она реально нужна.</p>
             </div>
             
@@ -632,11 +1216,102 @@
             
             <p>И вот теперь, глядя в иллюминатор на облака под собой, я чувствовала гордость и облегчение. Все неприятности, которые казались катастрофой, превратились в истории, которые я буду рассказывать снова и снова — смешные, страшные, трогательные.</p>
             
-            <div class="quote-in-text">
+            <div class="quote-in-text" onclick="playQuoteSound('quote6')">
                 <p>Ошибки — не враги. Они учат нас выживать, принимать решения, действовать в кризисных ситуациях и сохранять человеческое тепло. Именно эти несколько дней стали настоящим началом взрослой жизни Карлыгаш.</p>
             </div>
             
             <p>И хотя путь домой был долгим и трудным, он показал мне, что можно справиться даже с тем, что кажется невозможным, если есть смелость и немного удачи.</p>
+            
+            <div class="note" onclick="showModal('Рефлексия', 'Подобные испытания часто становятся поворотными моментами в жизни. Они показывают, на что мы действительно способны, и учат ценить поддержку окружающих, даже если это незнакомые люди.')">
+                <p><strong>Рефлексия:</strong> Подобные испытания часто становятся поворотными моментами в жизни.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Интерактивная карта -->
+    <section class="chapter" id="chapter6">
+        <span class="chapter-number">Интерактивная карта</span>
+        <h2 class="chapter-title">Путешествие Карлыгаш</h2>
+        
+        <div class="interactive-map" id="map"></div>
+        
+        <div class="chapter-content" style="margin-top: 30px;">
+            <p>Карта показывает ключевые точки путешествия Карлыгаш. Нажмите на маркеры, чтобы узнать больше о каждом месте.</p>
+            
+            <div class="note">
+                <p><strong>Инструкция:</strong> Используйте колесо мыши для увеличения/уменьшения карты. Перетаскивайте карту для навигации. Нажмите на маркеры для получения информации.</p>
+            </div>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 30px;">
+                <button class="map-btn" data-location="rehoboth" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Рехобот-Бич</button>
+                <button class="map-btn" data-location="nyc" style="background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Нью-Йорк</button>
+                <button class="map-btn" data-location="airport" style="background: #2ecc71; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Аэропорт JFK</button>
+                <button class="map-btn" data-location="home" style="background: #9b59b6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">Домой (Казахстан)</button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Персонажи -->
+    <section class="chapter" id="chapter7">
+        <span class="chapter-number">Персонажи</span>
+        <h2 class="chapter-title">Люди, которые помогли Карлыгаш</h2>
+        
+        <div class="chapter-content">
+            <p>На этом трудном пути Карлыгаш встретила разных людей. Некоторые из них стали её спасителями, другие — испытанием. Вот основные персонажи этой истории:</p>
+            
+            <div class="character-card" onclick="showModal('Карлыгаш', 'Главная героиня истории, студентка из Казахстана, работавшая летом в США по программе Work and Travel. Столкнувшись с непредвиденными обстоятельствами, она прошла через серьёзное испытание, которое стало для неё важным уроком взросления.')">
+                <div class="character-avatar">
+                    👩
+                </div>
+                <div class="character-info">
+                    <h3>Карлыгаш</h3>
+                    <p>Главная героиня, студентка из Казахстана</p>
+                </div>
+            </div>
+            
+            <div class="character-card" onclick="showModal('Арайлым', 'Казахская девушка, с которой Карлыгаш познакомилась в Рехобот-Бич. Именно она организовала помощь, найдя русского водителя, который согласился забрать Карлыгаш за 45 долларов.')">
+                <div class="character-avatar">
+                    👭
+                </div>
+                <div class="character-info">
+                    <h3>Арайлым</h3>
+                    <p>Казахская знакомая, организовавшая помощь</p>
+                </div>
+            </div>
+            
+            <div class="character-card" onclick="showModal('Мексиканская семья', 'Коллектив мексиканских работников, с которыми Карлыгаш работала летом. Они первыми предложили помощь, пригласив её переночевать у них.')">
+                <div class="character-avatar">
+                    👨‍👩‍👧‍👦
+                </div>
+                <div class="character-info">
+                    <h3>Мексиканская семья</h3>
+                    <p>Коллеги, предложившие помощь</p>
+                </div>
+            </div>
+            
+            <div class="character-card" onclick="showModal('Украинская женщина', 'Знакомая из Рехобот-Бич, которая помогла Карлыгаш в Нью-Йорке, когда у той отменили рейс. Приютила её на ночь и поддержала в трудную минуту.')">
+                <div class="character-avatar">
+                    👩
+                </div>
+                <div class="character-info">
+                    <h3>Украинская женщина</h3>
+                    <p>Приютила Карлыгаш в Нью-Йорке</p>
+                </div>
+            </div>
+            
+            <div class="character-card" onclick="showModal('Незнакомцы на остановке', 'Двое молодых мужчин, которые предложили помощь Карлыгаш на пустой остановке. Их появление вызвало у неё страх и тревогу, хотя их намерения могли быть и добрыми.')">
+                <div class="character-avatar">
+                    👥
+                </div>
+                <div class="character-info">
+                    <h3>Незнакомцы на остановке</h3>
+                    <p>Вызвали страх, но, возможно, хотели помочь</p>
+                </div>
+            </div>
+            
+            <div class="note" style="margin-top: 30px;">
+                <p><strong>Нажмите на карточку персонажа</strong>, чтобы узнать о нём больше информации.</p>
+            </div>
         </div>
     </section>
     
@@ -654,27 +1329,136 @@
                 <p style="margin-top: 15px; font-size: 0.9rem;">Текст предоставлен автором для публикации в формате long read.</p>
             </div>
             
+            <div style="margin-top: 30px; display: flex; justify-content: center; gap: 20px;">
+                <button id="shareStory" style="background: transparent; color: white; border: 1px solid white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 0.9rem;">
+                    <i class="fas fa-share-alt" style="margin-right: 8px;"></i> Поделиться историей
+                </button>
+                <button id="printStory" style="background: transparent; color: white; border: 1px solid white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 0.9rem;">
+                    <i class="fas fa-print" style="margin-right: 8px;"></i> Распечатать
+                </button>
+            </div>
+            
             <div class="copyright">
                 <p>© 2023 "Руслану чмоки". Все права защищены.</p>
-                <p style="margin-top: 10px;">Дизайн и вёрстка: Long Read Format</p>
+                <p style="margin-top: 10px;">Дизайн и вёрстка: Long Read Format | Интерактивные элементы: JavaScript</p>
             </div>
         </div>
     </footer>
     
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Активация навигации по главам
+        // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            // Показать навигацию по главам
-            const chapterNav = document.getElementById('chapterNav');
-            chapterNav.classList.add('active');
+            // Инициализация карты
+            initMap();
             
-            // Инициализация наблюдения за видимостью глав
+            // Инициализация навигации
+            initNavigation();
+            
+            // Инициализация темы
+            initTheme();
+            
+            // Инициализация звука
+            initSound();
+            
+            // Инициализация кнопок
+            initButtons();
+            
+            // Инициализация модального окна
+            initModal();
+            
+            // Инициализация временных шкал
+            initTimeline();
+            
+            // Инициализация словаря
+            initDictionary();
+            
+            // Запуск анимаций
+            startAnimations();
+            
+            // Воспроизведение приветственного звука
+            setTimeout(() => {
+                if (!localStorage.getItem('soundMuted')) {
+                    playSound('welcome');
+                }
+            }, 1000);
+        });
+        
+        // Карта
+        let map;
+        function initMap() {
+            // Создаем карту
+            map = L.map('map').setView([39.5, -75.0], 6);
+            
+            // Добавляем слой карты
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Добавляем маркеры
+            const rehobothMarker = L.marker([38.7200, -75.0761]).addTo(map)
+                .bindPopup('<b>Рехобот-Бич, Делавэр</b><br>Здесь началась история. Карлыгаш работала здесь летом и отсюда начала свой трудный путь домой.')
+                .openPopup();
+            
+            const nycMarker = L.marker([40.7128, -74.0060]).addTo(map)
+                .bindPopup('<b>Нью-Йорк</b><br>Сюда Карлыгаш приехала, чтобы улететь домой, но её рейс был отменен. Здесь она нашла приют у украинской женщины.');
+            
+            const airportMarker = L.marker([40.6413, -73.7781]).addTo(map)
+                .bindPopup('<b>Аэропорт JFK, Нью-Йорк</b><br>Место, где Карлыгаш пережила отмену рейса и 16 часов ожидания.');
+            
+            // Добавляем линию маршрута
+            const route = [
+                [38.7200, -75.0761], // Рехобот-Бич
+                [40.7128, -74.0060], // Нью-Йорк
+                [40.6413, -73.7781]  // Аэропорт JFK
+            ];
+            
+            L.polyline(route, {
+                color: '#3498db',
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10, 10'
+            }).addTo(map);
+            
+            // Обработчики для кнопок карты
+            document.querySelectorAll('.map-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const location = this.getAttribute('data-location');
+                    
+                    switch(location) {
+                        case 'rehoboth':
+                            map.setView([38.7200, -75.0761], 12);
+                            rehobothMarker.openPopup();
+                            break;
+                        case 'nyc':
+                            map.setView([40.7128, -74.0060], 12);
+                            nycMarker.openPopup();
+                            break;
+                        case 'airport':
+                            map.setView([40.6413, -73.7781], 14);
+                            airportMarker.openPopup();
+                            break;
+                        case 'home':
+                            // Анимированное перемещение к Казахстану
+                            map.flyTo([48.0196, 66.9237], 4);
+                            break;
+                    }
+                    
+                    // Воспроизведение звука
+                    playSound('map');
+                });
+            });
+        }
+        
+        // Навигация
+        function initNavigation() {
             const chapters = document.querySelectorAll('.chapter');
             const chapterDots = document.querySelectorAll('.chapter-dot');
             const chapterSelect = document.getElementById('chapterSelect');
-            
-            // Прогресс1-бар
             const progressBar = document.getElementById('progressBar');
+            const backToTop = document.getElementById('backToTop');
+            const progressText = document.getElementById('progressText');
+            const progressCircle = document.getElementById('progressCircle');
             
             // Функция для обновления активной главы
             function updateActiveChapter() {
@@ -714,10 +1498,13 @@
                     }
                 });
                 
-                // Обновляем прогресс-бар
-                const totalHeight = document.body.scrollHeight - window.innerHeight;
-                const progress = (window.scrollY / totalHeight) * 100;
-                progressBar.style.width = progress + '%';
+                
+                // Показываем/скрываем кнопку "Наверх"
+                if (window.scrollY > 500) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
             }
             
             // Функция для прокрутки к главе
@@ -726,7 +1513,7 @@
                 
                 if (chapterIndex == 0) {
                     targetElement = document.getElementById('header');
-                } else if (chapterIndex >= 1 && chapterIndex <= 5) {
+                } else if (chapterIndex >= 1 && chapterIndex <= 7) {
                     targetElement = document.getElementById('chapter' + chapterIndex);
                 } else {
                     targetElement = document.getElementById('footer');
@@ -737,21 +1524,30 @@
                         top: targetElement.offsetTop,
                         behavior: 'smooth'
                     });
+                    
+                    // Воспроизведение звука
+                    playSound('navigation');
                 }
             };
             
             // Обработчик прокрутки
             window.addEventListener('scroll', updateActiveChapter);
             
+            // Кнопка "Наверх"
+            backToTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                
+                // Воспроизведение звука
+                playSound('navigation');
+            });
+            
             // Инициализация при загрузке
             updateActiveChapter();
             
-            // Анимация появления параграфов при прокрутке
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-            
+            // Наблюдатель для анимации параграфов
             const observer = new IntersectionObserver(function(entries) {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -762,17 +1558,323 @@
                         });
                     }
                 });
-            }, observerOptions);
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
             
             // Наблюдаем за главами
             chapters.forEach(chapter => {
                 observer.observe(chapter);
             });
+        }
+        
+        // Тема
+        function initTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
             
-            // Плавное появление заголовка
+            // Проверяем сохраненную тему
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+            
+            // Обработчик переключения темы
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    playSound('theme-dark');
+                } else {
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    playSound('theme-light');
+                }
+            });
+        }
+        
+        // Звук
+        function initSound() {
+            const soundToggle = document.getElementById('soundToggle');
+            const soundIcon = document.getElementById('soundIcon');
+            
+            // Проверяем сохраненные настройки звука
+            const soundMuted = localStorage.getItem('soundMuted') === 'true';
+            if (soundMuted) {
+                soundToggle.classList.add('muted');
+                soundIcon.classList.remove('fa-volume-up');
+                soundIcon.classList.add('fa-volume-mute');
+            }
+            
+            // Обработчик переключения звука
+            soundToggle.addEventListener('click', function() {
+                this.classList.toggle('muted');
+                
+                if (this.classList.contains('muted')) {
+                    localStorage.setItem('soundMuted', 'true');
+                    soundIcon.classList.remove('fa-volume-up');
+                    soundIcon.classList.add('fa-volume-mute');
+                } else {
+                    localStorage.setItem('soundMuted', 'false');
+                    soundIcon.classList.remove('fa-volume-mute');
+                    soundIcon.classList.add('fa-volume-up');
+                    // Воспроизводим звук при включении
+                    playSound('toggle');
+                }
+            });
+        }
+        
+        // Воспроизведение звуков
+        function playSound(type) {
+            // Проверяем, не отключен ли звук
+            if (localStorage.getItem('soundMuted') === 'true') return;
+            
+            // Создаем аудио контекст
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            switch(type) {
+                case 'welcome':
+                    // Приветственный звук
+                    playTone(audioContext, 523.25, 0.3, 0.1); // C5
+                    setTimeout(() => playTone(audioContext, 659.25, 0.3, 0.1), 200); // E5
+                    setTimeout(() => playTone(audioContext, 783.99, 0.5, 0.1), 400); // G5
+                    break;
+                    
+                case 'navigation':
+                    // Звук навигации
+                    playTone(audioContext, 392.00, 0.1, 0.1); // G4
+                    break;
+                    
+                case 'thought':
+                    // Звук мысли
+                    playTone(audioContext, 261.63, 0.2, 0.2); // C4
+                    setTimeout(() => playTone(audioContext, 329.63, 0.2, 0.2), 100); // E4
+                    break;
+                    
+                case 'quote':
+                    // Звук цитаты
+                    playTone(audioContext, 440.00, 0.3, 0.1); // A4
+                    break;
+                    
+                case 'map':
+                    // Звук карты
+                    playTone(audioContext, 587.33, 0.1, 0.1); // D5
+                    playTone(audioContext, 493.88, 0.1, 0.1); // B4
+                    break;
+                    
+                case 'theme-dark':
+                    // Звук переключения на темную тему
+                    playTone(audioContext, 220.00, 0.2, 0.1); // A3
+                    setTimeout(() => playTone(audioContext, 174.61, 0.3, 0.1), 100); // F3
+                    break;
+                    
+                case 'theme-light':
+                    // Звук переключения на светлую тему
+                    playTone(audioContext, 261.63, 0.2, 0.1); // C4
+                    setTimeout(() => playTone(audioContext, 329.63, 0.3, 0.1), 100); // E4
+                    break;
+                    
+                case 'toggle':
+                    // Звук переключения
+                    playTone(audioContext, 523.25, 0.1, 0.1); // C5
+                    break;
+                    
+                case 'click':
+                    // Звук клика
+                    playTone(audioContext, 1000, 0.05, 0.1); // Высокий тон
+                    break;
+            }
+        }
+        
+        // Воспроизведение тона
+        function playTone(audioContext, frequency, duration, volume) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        // Воспроизведение звука мысли
+        function playThoughtSound(thoughtId) {
+            playSound('thought');
+            
+            // Добавляем визуальный эффект
+            const thought = event.currentTarget;
+            thought.style.transform = 'translateY(-5px) scale(1.02)';
+            setTimeout(() => {
+                thought.style.transform = '';
+            }, 300);
+        }
+        
+        // Воспроизведение звука цитаты
+        function playQuoteSound(quoteId) {
+            playSound('quote');
+            
+            // Добавляем визуальный эффект
+            const quote = event.currentTarget;
+            quote.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+            setTimeout(() => {
+                quote.style.backgroundColor = '';
+            }, 500);
+        }
+        
+        // Кнопки
+        function initButtons() {
+            // Кнопка "Начать чтение"
+            document.getElementById('startReading').addEventListener('click', function() {
+                scrollToChapter(1);
+                playSound('navigation');
+            });
+            
+            // Кнопка "Персонажи"
+            document.getElementById('exploreCharacters').addEventListener('click', function() {
+                scrollToChapter(7);
+                playSound('navigation');
+            });
+            
+            // Кнопка "Поделиться историей"
+            document.getElementById('shareStory').addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Руслану чмоки - История взросления в Америке',
+                        text: 'Прочитайте эту удивительную историю о взрослении, страхе и человеческой доброте в далёкой Америке',
+                        url: window.location.href
+                    });
+                } else {
+                    // Копируем ссылку в буфер обмена
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Ссылка на историю скопирована в буфер обмена!');
+                }
+                playSound('click');
+            });
+            
+            // Кнопка "Распечатать"
+            document.getElementById('printStory').addEventListener('click', function() {
+                window.print();
+                playSound('click');
+            });
+        }
+        
+        // Модальное окно
+        function initModal() {
+            const modal = document.getElementById('infoModal');
+            const modalClose = document.getElementById('modalClose');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Функция показа модального окна
+            window.showModal = function(title, content) {
+                modalTitle.textContent = title;
+                modalContent.innerHTML = `<p>${content}</p>`;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                playSound('click');
+            };
+            
+            // Закрытие модального окна
+            modalClose.addEventListener('click', function() {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                playSound('click');
+            });
+            
+            // Закрытие по клику вне окна
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // Закрытие по клавише Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+        
+        // Временные шкалы
+        function initTimeline() {
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            
+            timelineItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const time = this.querySelector('.timeline-time').textContent;
+                    const content = this.querySelector('.timeline-content').textContent;
+                    showModal(time, content);
+                });
+            });
+        }
+        
+        // Словарь
+        function initDictionary() {
+            // Термины уже определены в HTML через data-definition
+            // Здесь можно добавить дополнительную логику, если нужно
+        }
+        
+        // Анимации
+        function startAnimations() {
+            // Анимация заголовка
             setTimeout(() => {
                 document.querySelector('.header-content').style.animation = 'fadeInUp 1.2s forwards 0.5s';
             }, 100);
+            
+            // Показываем навигацию с задержкой
+            setTimeout(() => {
+                document.getElementById('chapterNav').classList.add('active');
+            }, 1500);
+        }
+        
+        // Увеличение изображений
+        function toggleZoom(imageId) {
+            const imageContainer = document.getElementById(imageId);
+            imageContainer.classList.toggle('zoomed');
+            
+            if (imageContainer.classList.contains('zoomed')) {
+                document.body.style.overflow = 'hidden';
+                playSound('click');
+            } else {
+                document.body.style.overflow = 'auto';
+                playSound('click');
+            }
+        }
+        
+        // Закрытие увеличенного изображения по клику
+        document.addEventListener('click', function(e) {
+            const imageContainers = document.querySelectorAll('.image-container.zoomed');
+            imageContainers.forEach(container => {
+                if (!container.contains(e.target) || e.target.classList.contains('image-zoom-btn')) {
+                    container.classList.remove('zoomed');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+        
+        // Закрытие увеличенного изображения по клавише Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const imageContainers = document.querySelectorAll('.image-container.zoomed');
+                imageContainers.forEach(container => {
+                    container.classList.remove('zoomed');
+                    document.body.style.overflow = 'auto';
+                });
+            }
         });
     </script>
 </body>
