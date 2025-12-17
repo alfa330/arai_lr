@@ -699,6 +699,55 @@
             background-color: var(--primary);
         }
         
+        .image-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #111;
+            aspect-ratio: 16 / 9;
+        }
+
+        /* затемнение снизу */
+        .image-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(0,0,0,0.65),
+                rgba(0,0,0,0.1),
+                transparent
+            );
+            pointer-events: none;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 18px;
+            left: 18px;
+            right: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #fff;
+            z-index: 2;
+        }
+
+        .image-overlay i {
+            font-size: 2.2rem;
+            opacity: 0.9;
+        }
+
+        .image-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .image-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
         /* Звуковые эффекты */
         .sound-toggle {
             position: fixed;
@@ -1026,17 +1075,22 @@
             </div>
         </div>
         
-        <div class="image-container" data-image-path="images/chapter1-bus-stop.jpg" id="image1">
+        <div class="image-container image-card" data-image-path="images/chapter1-bus-stop.jpg" id="image1">
             <button class="image-zoom-btn" onclick="toggleZoom('image1')">
                 <i class="fas fa-search-plus"></i>
             </button>
-            <!-- Здесь будет изображение -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <i class="fas fa-bus" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
-                <p>Изображение: Остановка в Рехобот-Бич вечером</p>
-                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
+
+            <!-- Картинка будет подставлена JS -->
+
+            <div class="image-overlay">
+                <i class="fas fa-bus"></i>
+                <div class="image-text">
+                    <div class="image-title">Остановка автобуса</div>
+                    <div class="image-subtitle">Рехобот-Бич, вечер</div>
+                </div>
             </div>
         </div>
+
         
         <div class="chapter-content">
         <p>Я стояла на остановке, почти в полном одиночестве. Вокруг — пустые улицы <span class="dictionary-term" data-definition="Рехобот-Бич — небольшой курортный город в Делавэре, США, популярный среди студентов, работающих летом по программе Work and Travel.">Рехобот-Бич</span>. Вечер. Каскад фонарей отбрасывал свет на тротуар, но он едва пробивал тьму вокруг. Холодный ветер подгонял меня к краю платформы, и я начала ощущать настоящую растерянность.</p>
@@ -1068,15 +1122,19 @@
         <span class="chapter-number">Глава 2</span>
         <h2 class="chapter-title">Мексиканская семья и Арайлым</h2>
         
-        <div class="image-container" data-image-path="images/chapter2-phone.jpg" id="image2">
+        <div class="image-container image-card" data-image-path="images/chapter2-phone.jpg" id="image2">
             <button class="image-zoom-btn" onclick="toggleZoom('image2')">
                 <i class="fas fa-search-plus"></i>
             </button>
-            <!-- Здесь будет изображение -->
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <i class="fas fa-mobile-alt" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
-                <p>Изображение: Телефон с сообщениями о помощи</p>
-                <p style="font-size: 0.8rem; margin-top: 10px;">(Нажмите для увеличения)</p>
+
+            <!-- Картинка будет подставлена JS -->
+
+            <div class="image-overlay">
+                <i class="fas fa-mobile-alt"></i>
+                <div class="image-text">
+                    <div class="image-title">Сообщения о помощи</div>
+                    <div class="image-subtitle">Телефон на улице, дневной свет</div>
+                </div>
             </div>
         </div>
         
