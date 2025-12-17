@@ -1,1 +1,779 @@
-
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руслану чмоки - История взросления в Америке</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+        
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --text: #333;
+            --transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        
+        /* Навигация по главам */
+        .chapter-nav {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 10px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .chapter-nav.active {
+            display: flex;
+        }
+        
+        .chapter-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #bdc3c7;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .chapter-dot:hover, .chapter-dot.active {
+            background-color: var(--secondary);
+            transform: scale(1.3);
+        }
+        
+        .chapter-dot::after {
+            content: attr(data-chapter);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .chapter-dot:hover::after {
+            opacity: 1;
+        }
+        
+        /* Заголовок */
+        .header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('images/header-bg.jpg') center/cover no-repeat;
+            color: white;
+            padding: 0 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary) 0%, transparent 100%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .header-content {
+            max-width: 800px;
+            z-index: 1;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s forwards 0.5s;
+        }
+        
+        .title {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+            color: var(--light);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            opacity: 0.8;
+            z-index: 1;
+            animation: bounce 2s infinite;
+        }
+        
+        .scroll-indicator i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Главы */
+        .chapter {
+            padding: 100px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: var(--transition);
+        }
+        
+        .chapter.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .chapter-number {
+            font-size: 1rem;
+            color: var(--secondary);
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .chapter-title {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .chapter-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: var(--accent);
+        }
+        
+        .chapter-content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+        }
+        
+        .chapter-content p {
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+        
+        .chapter.active .chapter-content p {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .chapter-content p:nth-child(1) { transition-delay: 0.1s; }
+        .chapter-content p:nth-child(2) { transition-delay: 0.3s; }
+        .chapter-content p:nth-child(3) { transition-delay: 0.5s; }
+        .chapter-content p:nth-child(4) { transition-delay: 0.7s; }
+        .chapter-content p:nth-child(5) { transition-delay: 0.9s; }
+        .chapter-content p:nth-child(6) { transition-delay: 1.1s; }
+        .chapter-content p:nth-child(7) { transition-delay: 1.3s; }
+        .chapter-content p:nth-child(8) { transition-delay: 1.5s; }
+        
+        .image-container {
+            margin: 40px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            height: 400px;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #777;
+        }
+        
+        .image-container::before {
+            content: 'Путь для фотографии: ' attr(data-image-path);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .chapter-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+        
+        .image-container:hover .chapter-image {
+            transform: scale(1.05);
+        }
+        
+        /* Футер */
+        .footer {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 60px 20px;
+            margin-top: 50px;
+        }
+        
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .quote {
+            font-size: 1.5rem;
+            font-style: italic;
+            margin-bottom: 30px;
+            color: var(--light);
+        }
+        
+        .author {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .copyright {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+        
+        /* Анимации */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) translateX(-50%);
+            }
+            40% {
+                transform: translateY(-10px) translateX(-50%);
+            }
+            60% {
+                transform: translateY(-5px) translateX(-50%);
+            }
+        }
+        
+        /* Прогресс-бар */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: var(--secondary);
+            z-index: 1000;
+            transition: width 0.3s;
+        }
+        
+        /* Мобильная навигация */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .mobile-nav select {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            color: var(--primary);
+            padding: 5px;
+            outline: none;
+            width: 200px;
+        }
+        
+        @media (max-width: 768px) {
+            .chapter-nav {
+                display: none;
+            }
+            
+            .mobile-nav {
+                display: block;
+            }
+            
+            .chapter {
+                padding: 70px 20px;
+            }
+            
+            .chapter-title {
+                font-size: 2rem;
+            }
+            
+            .image-container {
+                height: 250px;
+            }
+        }
+        
+        /* Цитаты в тексте */
+        .quote-in-text {
+            border-left: 4px solid var(--secondary);
+            padding-left: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            color: #555;
+            font-size: 1.1rem;
+        }
+        
+        /* Выделение мыслей */
+        .thought {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        /* Заметки на полях */
+        .note {
+            background-color: #fff9e6;
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Прогресс-бар -->
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <!-- Навигация по главам (боковая) -->
+    <div class="chapter-nav" id="chapterNav">
+        <div class="chapter-dot active" data-chapter="Начало" onclick="scrollToChapter(0)"></div>
+        <div class="chapter-dot" data-chapter="Глава 1" onclick="scrollToChapter(1)"></div>
+        <div class="chapter-dot" data-chapter="Глава 2" onclick="scrollToChapter(2)"></div>
+        <div class="chapter-dot" data-chapter="Глава 3" onclick="scrollToChapter(3)"></div>
+        <div class="chapter-dot" data-chapter="Глава 4" onclick="scrollToChapter(4)"></div>
+        <div class="chapter-dot" data-chapter="Глава 5" onclick="scrollToChapter(5)"></div>
+        <div class="chapter-dot" data-chapter="Завершение" onclick="scrollToChapter(6)"></div>
+    </div>
+    
+    <!-- Мобильная навигация -->
+    <div class="mobile-nav">
+        <select id="chapterSelect" onchange="scrollToChapter(this.value)">
+            <option value="0">Начало</option>
+            <option value="1">Глава 1: Далёкая остановка</option>
+            <option value="2">Глава 2: Мексиканская семья</option>
+            <option value="3">Глава 3: Аэропорт и отмена рейса</option>
+            <option value="4">Глава 4: Финальный рывок домой</option>
+            <option value="5">Глава 5: Осознание и взросление</option>
+            <option value="6">Завершение</option>
+        </select>
+    </div>
+    
+    <!-- Заголовок -->
+    <header class="header" id="header">
+        <div class="header-content">
+            <h1 class="title">Руслану чмоки</h1>
+            <p class="subtitle">История о взрослении, страхе и человеческой доброте в далёкой Америке</p>
+            <div class="note" style="max-width: 600px; margin: 40px auto 0; background: rgba(255,255,255,0.2); border-left-color: white;">
+                <p>Эта история основана на реальных событиях, произошедших с Карлыгаш во время её работы в США. Имена некоторых персонажей изменены.</p>
+            </div>
+        </div>
+        
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+            <span>Листайте вниз</span>
+        </div>
+    </header>
+    
+    <!-- Глава 1 -->
+    <section class="chapter" id="chapter1">
+        <span class="chapter-number">Глава 1</span>
+        <h2 class="chapter-title">Далёкая остановка и пустые улицы</h2>
+        
+        <div class="image-container" data-image-path="images/chapter1-bus-stop.jpg">
+            <!-- Здесь будет изображение -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <i class="fas fa-bus" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
+                <p>Изображение: Остановка в Рехобот-Бич вечером</p>
+            </div>
+        </div>
+        
+        <div class="chapter-content">
+            <p>Я стояла на остановке, почти в полном одиночестве. Вокруг — пустые улицы американского городка, где я работала этим летом, Рехобот-Бич. Вечер. Каскад фонарей отбрасывал свет на тротуар, но он едва пробивал тьму вокруг. Холодный ветер подгонял меня к краю платформы, и я начала ощущать настоящую растерянность.</p>
+            
+            <div class="thought">
+                <p>«Да ладно, я всего лишь выйду на автобус и поеду домой… Это же так просто!» — думала я.</p>
+            </div>
+            
+            <p>В голове роилась паника. Я проверяла карту снова и снова: «Ещё один автобус, и я буду точно в центре. Потом — прямой рейс домой». Минуты тянулись как часы, а автобуса всё нет. А рядом — только один человек, странно молча стоящий на улице.</p>
+            
+            <p>Тогда я впервые ощутила абсолютное одиночество. И внезапно дошло: «Что-то не так. Очень не так». Я подошла к расписанию. Сердце прыгнуло в горло: последний автобус ушёл в 6 вечера, а сейчас уже 9! Следующий — только завтра в 6 утра.</p>
+            
+            <p>Я стояла, как в фильме ужасов. Америка, одинокая остановка, темнота, пустые улицы, и я — потерянная, голодная и усталая. «Боже, как я сюда попала?» — думала я, но сразу же пыталась подавить страх.</p>
+            
+            <p>И тут появились они — двое молодых мужчин. «Do you need any help? Come on. I will take you» — сказали они с улыбкой, но в тот момент это прозвучало для меня как что-то странное и тревожное. Сердце бешено колотилось. «Нет, нет, спасибо» — ответила я, стараясь не показать страх. Но мысли вертелись как калейдоскоп: «Они добрые или нет? Я не могу просто сесть к ним в машину… но что делать?»</p>
+            
+            <p>Прошло ещё несколько минут. Я размышляла: «Тааак, Карлыгаш, ты столько всего пережила этим летом, работала, ездила, говорила на английском… и теперь что, вот это твой кризис?» — пыталась я себя утешить, но страх и растерянность не отпускали.</p>
+            
+            <p>Я вспомнила, что могу обратиться к знакомым, но их телефон сейчас недоступен. Я уже чувствовала, что каждая секунда растёт в панику. И тогда я решилась: беру телефон, начинаю искать все контакты людей, которых знаю в городе.</p>
+        </div>
+    </section>
+    
+    <!-- Глава 2 -->
+    <section class="chapter" id="chapter2">
+        <span class="chapter-number">Глава 2</span>
+        <h2 class="chapter-title">Мексиканская семья и Арайлым</h2>
+        
+        <div class="image-container" data-image-path="images/chapter2-phone.jpg">
+            <!-- Здесь будет изображение -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <i class="fas fa-mobile-alt" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
+                <p>Изображение: Телефон с сообщениями о помощи</p>
+            </div>
+        </div>
+        
+        <div class="chapter-content">
+            <p>Телефон в руке дрожал так же, как и мои пальцы. Я набирала знакомые номера, надеясь на чудо. Первым откликнулся мексиканский семейный коллектив, с которыми я работала этим летом:</p>
+            
+            <div class="quote-in-text">
+                <p>— Приходи к нам, — сказали они. — Нам будет приятно, если ты переночу у нас.</p>
+            </div>
+            
+            <p>Я вздохнула с облегчением, но тут же вспомнила: «А мой брат? А моя сестра?» — они даже не берут трубку. Сердце снова начало биться быстрее, и я почувствовала, что нахожусь в состоянии между паникой и надеждой.</p>
+            
+            <p>И тут всплыла мысль о знакомой Арайлым — казахской девушке, с которой я познакомилась в Rehoboth Beach. В Instagram она как раз выложила историю. Я набрала ей сообщение. В голове крутилось: «Если она не ответит… Я останусь здесь одна. Но надо пробовать.»</p>
+            
+            <p>Её ответ пришёл почти мгновенно:</p>
+            
+            <div class="quote-in-text">
+                <p>— Көөөз, я могу спросить одного моего русского друга, возможно, он поможет. Но он возьмет деньги.</p>
+            </div>
+            
+            <p>Я чуть не выдохнула. «Конечно, дам! Главное, чтобы я не осталась с этими странными парнями на улице».</p>
+            
+            <p>Арайлым предложила:</p>
+            
+            <div class="quote-in-text">
+                <p>— За 45 долларов мы можем тебя забрать.</p>
+            </div>
+            
+            <p>Я улыбнулась, хотя сама едва могла поверить, что это реально: 45 долларов за спасение от ночной улицы в Америке. Сердце постепенно успокаивалось, паника смягчалась, а чувство облегчения растягивалось внутри меня.</p>
+            
+            <p>Но это был только первый шаг. Надо было дойти до того места, где мы должны были встретиться. И тут я вспомнила, что мне ещё предстоит долго и мучительно двигаться по городу, чтобы добраться до безопасного места.</p>
+        </div>
+    </section>
+    
+    <!-- Глава 3 -->
+    <section class="chapter" id="chapter3">
+        <span class="chapter-number">Глава 3</span>
+        <h2 class="chapter-title">Аэропорт, отмена рейса и неожиданная помощь</h2>
+        
+        <div class="image-container" data-image-path="images/chapter3-airport.jpg">
+            <!-- Здесь будет изображение -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <i class="fas fa-plane" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
+                <p>Изображение: Аэропорт Нью-Йорка с табло отмен рейсов</p>
+            </div>
+        </div>
+        
+        <div class="chapter-content">
+            <p>Следующее утро началось с лёгкого ужаса. Мне предстояло добраться до аэропорта Нью-Йорка — огромного, шумного, непредсказуемого. Я ехала медленно, пересаживаясь с метро на метро, а потом ещё на автобус. Каждая остановка давалась с трудом, потому что дорога была длинной, а я всё ещё оставалась под впечатлением от вчерашней ночи на пустой улице.</p>
+            
+            <p>К 3:30 я наконец добралась до терминала. Это был не маленький провинциальный аэропорт — здесь была толпа людей, длинные очереди к стойкам регистрации, табло переливалось информацией о рейсах. Я встала в очередь, сердце колотилось, а мозг пытался посчитать, сколько у меня осталось времени до рейса.</p>
+            
+            <p>И тут удар — табло показало: «РЕЙС ОТМЕНЕН».</p>
+            
+            <div class="thought">
+                <p>Я замерла. На мгновение закружилась голова. Вокруг — шум людей, объявления о других рейсах, но меня это не касалось.</p>
+            </div>
+            
+            <p>Я подошла к кассе и едва выдавила:</p>
+            
+            <div class="quote-in-text">
+                <p>— Следующий рейс?</p>
+                <p>— Завтра, в 16:10, — сказала кассир.</p>
+            </div>
+            
+            <p>16 часов ожидания в аэропорту. Я расплакалась прямо там, посреди очереди, ощущая усталость, голод и растерянность. 16 часов… 16 часов… я не представляла, как проведу это время.</p>
+            
+            <p>И тут я вспомнила украинскую женщину, с которой познакомилась раньше в Рехобот-Бич. Она говорила: «Если будешь в Нью-Йорке и нужна помощь — пиши». Я набрала ей, объяснила ситуацию.</p>
+            
+            <div class="quote-in-text">
+                <p>— Конечно, приезжай, — ответила она, присылая адрес.</p>
+            </div>
+            
+            <p>И снова облегчение, смешанное с лёгкой тревогой: ехать ночью через незнакомый город к чужому дому, где меня ждёт женщина, с которой я едва знакома. Но вариантов не было.</p>
+            
+            <p>Дорога заняла около 3,5 часов. Я вышла к её дому поздно вечером. Они встретили меня с улыбкой, предложили чай, показали комнату, где я могла переночевать. Атмосфера была тёплой, но странной для меня: чужой город, чужие люди, а я одна, но всё же безопасно. Мы пошли вечером прогуляться по ближайшему парку, и впервые за сутки я почувствовала, что могу дышать спокойно.</p>
+        </div>
+    </section>
+    
+    <!-- Глава 4 -->
+    <section class="chapter" id="chapter4">
+        <span class="chapter-number">Глава 4</span>
+        <h2 class="chapter-title">Раннее утро, метро и финальный рывок домой</h2>
+        
+        <div class="image-container" data-image-path="images/chapter4-subway.jpg">
+            <!-- Здесь будет изображение -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <i class="fas fa-subway" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
+                <p>Изображение: Метро Нью-Йорка рано утром</p>
+            </div>
+        </div>
+        
+        <div class="chapter-content">
+            <p>Я проснулась около полуночи и впервые за несколько дней смогла нормально поспать. Ночной сон длился почти до утра, а потом — новый вызов: добраться до аэропорта на следующий рейс.</p>
+            
+            <p>Дорога началась с метро: пересадки, длинные туннели, эскалаторы, люди с чемоданами, шум, объявления. Каждая пересадка заставляла меня нервничать: «А вдруг я опоздаю? А вдруг что-то пойдёт не так?» Но теперь я уже была не та растерянная девушка, что стояла на остановке в Рехобот-Бич. Я проверяла все маршруты, карты, время и знала, что нужно быть внимательной.</p>
+            
+            <p>После метро — автобус. Ночной Нью-Йорк был странно пустым, только редкие прохожие и фонари, отражающиеся в мокром асфальте. В голове постоянно крутились мысли: «Сейчас я должна быть там, в аэропорту, к рейсу. Ни секунды промедления».</p>
+            
+            <p>К 3:30 я достигла терминала. Это был огромный аэропорт — длинные коридоры, шумные очереди, табло, электронные информационные панели. Я встала в очередь на регистрацию и ощутила знакомое волнение: сердце колотилось, а в голове мелькали все события последних дней: пустая остановка, темнота, два странных парня, помощь Арайлым, мексиканская семья, ночь у украинской женщины.</p>
+            
+            <div class="note">
+                <p>Это был момент истины — если что-то пойдёт не так сейчас, все предыдущие усилия окажутся напрасными.</p>
+            </div>
+            
+            <p>На этот раз всё прошло гладко. Я села в самолёт, сердце постепенно успокаивалось. Я осознала, что пережила несколько дней полного хаоса, паники, усталости и голода, и всё же справилась.</p>
+        </div>
+    </section>
+    
+    <!-- Глава 5 -->
+    <section class="chapter" id="chapter5">
+        <span class="chapter-number">Глава 5</span>
+        <h2 class="chapter-title">Осознание и взросление</h2>
+        
+        <div class="image-container" data-image-path="images/chapter5-plane-window.jpg">
+            <!-- Здесь будет изображение -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <i class="fas fa-plane-departure" style="font-size: 3rem; color: #aaa; margin-bottom: 15px;"></i>
+                <p>Изображение: Вид из иллюминатора самолёта</p>
+            </div>
+        </div>
+        
+        <div class="chapter-content">
+            <p>Когда самолёт набрал высоту, я села в кресло и впервые за несколько дней почувствовала спокойствие. Я оглянулась назад и осознала, через что прошла: пустая остановка в темноте, страх перед незнакомцами, телефон, который был одновременно спасением и источником тревоги, переписки с Арайлым, мексиканская семья, ночь у украинской женщины, метро и автобусы Нью-Йорка.</p>
+            
+            <p>Каждая деталь — до самых пальцев ног, каждый запах, шум, каждый человек, с которым я говорила, остались в моей памяти. Я вспоминала, как дрожали руки, как сердце колотилось, как хотелось плакать прямо на улице, как страх переполнял всё тело. Но теперь я понимала: это были уроки взросления.</p>
+            
+            <div class="thought">
+                <p>Я больше не та Карлыгаш, что стояла растерянная на остановке. Я научилась проверять маршруты, заранее готовиться, не бояться ошибок и просить помощи, когда она реально нужна.</p>
+            </div>
+            
+            <p>Я поняла, что взрослость — это не идеальный план и контроль над каждой ситуацией, а способность справляться, когда всё идёт не так.</p>
+            
+            <p>И вот теперь, глядя в иллюминатор на облака под собой, я чувствовала гордость и облегчение. Все неприятности, которые казались катастрофой, превратились в истории, которые я буду рассказывать снова и снова — смешные, страшные, трогательные.</p>
+            
+            <div class="quote-in-text">
+                <p>Ошибки — не враги. Они учат нас выживать, принимать решения, действовать в кризисных ситуациях и сохранять человеческое тепло. Именно эти несколько дней стали настоящим началом взрослой жизни Карлыгаш.</p>
+            </div>
+            
+            <p>И хотя путь домой был долгим и трудным, он показал мне, что можно справиться даже с тем, что кажется невозможным, если есть смелость и немного удачи.</p>
+        </div>
+    </section>
+    
+    <!-- Футер -->
+    <footer class="footer" id="footer">
+        <div class="footer-content">
+            <div class="quote">
+                "Путешествие в тысячу миль начинается с одного шага, но иногда этот шаг приходится делать на темной остановке в незнакомом городе"
+            </div>
+            
+            <div class="author">— Карлыгаш</div>
+            
+            <div style="margin-top: 40px; font-size: 1.1rem;">
+                <p>Эта история основана на реальных событиях лета 2023 года.</p>
+                <p style="margin-top: 15px; font-size: 0.9rem;">Текст предоставлен автором для публикации в формате long read.</p>
+            </div>
+            
+            <div class="copyright">
+                <p>© 2023 "Руслану чмоки". Все права защищены.</p>
+                <p style="margin-top: 10px;">Дизайн и вёрстка: Long Read Format</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Активация навигации по главам
+        document.addEventListener('DOMContentLoaded', function() {
+            // Показать навигацию по главам
+            const chapterNav = document.getElementById('chapterNav');
+            chapterNav.classList.add('active');
+            
+            // Инициализация наблюдения за видимостью глав
+            const chapters = document.querySelectorAll('.chapter');
+            const chapterDots = document.querySelectorAll('.chapter-dot');
+            const chapterSelect = document.getElementById('chapterSelect');
+            
+            // Прогресс1-бар
+            const progressBar = document.getElementById('progressBar');
+            
+            // Функция для обновления активной главы
+            function updateActiveChapter() {
+                let currentChapterIndex = 0;
+                const headerHeight = document.getElementById('header').offsetHeight;
+                const scrollPosition = window.scrollY + headerHeight / 2;
+                
+                // Находим текущую главу
+                chapters.forEach((chapter, index) => {
+                    const chapterTop = chapter.offsetTop;
+                    const chapterBottom = chapterTop + chapter.offsetHeight;
+                    
+                    if (scrollPosition >= chapterTop && scrollPosition < chapterBottom) {
+                        currentChapterIndex = index + 1; // +1 потому что 0 - это заголовок
+                    }
+                });
+                
+                // Обновляем точки навигации
+                chapterDots.forEach((dot, index) => {
+                    if (index === currentChapterIndex) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+                
+                // Обновляем выпадающий список
+                chapterSelect.value = currentChapterIndex;
+                
+                // Обновляем видимость глав
+                chapters.forEach((chapter, index) => {
+                    const rect = chapter.getBoundingClientRect();
+                    const windowHeight = window.innerHeight;
+                    
+                    if (rect.top < windowHeight * 0.75 && rect.bottom > 0) {
+                        chapter.classList.add('active');
+                    }
+                });
+                
+                // Обновляем прогресс-бар
+                const totalHeight = document.body.scrollHeight - window.innerHeight;
+                const progress = (window.scrollY / totalHeight) * 100;
+                progressBar.style.width = progress + '%';
+            }
+            
+            // Функция для прокрутки к главе
+            window.scrollToChapter = function(chapterIndex) {
+                let targetElement;
+                
+                if (chapterIndex == 0) {
+                    targetElement = document.getElementById('header');
+                } else if (chapterIndex >= 1 && chapterIndex <= 5) {
+                    targetElement = document.getElementById('chapter' + chapterIndex);
+                } else {
+                    targetElement = document.getElementById('footer');
+                }
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop,
+                        behavior: 'smooth'
+                    });
+                }
+            };
+            
+            // Обработчик прокрутки
+            window.addEventListener('scroll', updateActiveChapter);
+            
+            // Инициализация при загрузке
+            updateActiveChapter();
+            
+            // Анимация появления параграфов при прокрутке
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const paragraphs = entry.target.querySelectorAll('.chapter-content p');
+                        paragraphs.forEach(p => {
+                            p.style.opacity = '1';
+                            p.style.transform = 'translateY(0)';
+                        });
+                    }
+                });
+            }, observerOptions);
+            
+            // Наблюдаем за главами
+            chapters.forEach(chapter => {
+                observer.observe(chapter);
+            });
+            
+            // Плавное появление заголовка
+            setTimeout(() => {
+                document.querySelector('.header-content').style.animation = 'fadeInUp 1.2s forwards 0.5s';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
