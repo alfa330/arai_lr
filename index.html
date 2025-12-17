@@ -325,6 +325,26 @@
         .image-container.zoomed::before {
             display: none;
         }
+
+        /* Скрывать текст пути, если внутри уже есть <img> */
+        .image-container.has-img::before { display: none; }
+
+        /* Картинка занимает весь контейнер */
+        .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        cursor: zoom-in;
+        }
+
+        /* В zoomed режиме — показываем картинку корректно */
+        .image-container.zoomed img {
+        object-fit: contain;
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        }
         
         .image-zoom-btn {
             position: absolute;
@@ -1375,6 +1395,8 @@
             
             // Запуск анимаций
             startAnimations();
+
+            initImages();
             
             // Воспроизведение приветственного звука
             setTimeout(() => {
@@ -1384,6 +1406,49 @@
             }, 1000);
         });
         
+        function initImages() {
+            document.querySelectorAll('.image-container').forEach(container => {
+                const path = container.dataset.imagePath;
+                if (!path) return;
+
+                // если <img> уже добавлен - ничего не делаем
+                if (container.querySelector('img')) {
+                    container.classList.add('has-img');
+                    return;
+                }
+
+                const img = document.createElement('img');
+                img.src = path;
+                // Альт — возьмём первое описание в контейнере или fallback
+                const desc = container.querySelector('p') ? container.querySelector('p').textContent.trim() : '';
+                img.alt = desc || 'Изображение';
+                img.loading = 'lazy';
+                img.className = 'chapter-img';
+
+                // Успешная загрузка — помечаем контейнер
+                img.addEventListener('load', () => {
+                    container.classList.add('has-img');
+                });
+
+                // Ошибка загрузки — логируем и удаляем <img>, оставляем плейсхолдер
+                img.addEventListener('error', () => {
+                    console.warn('Не удалось загрузить изображение по пути:', path);
+                    // можно показывать запасное изображение:
+                    // img.src = 'images/placeholder.jpg';
+                    img.remove();
+                });
+
+                // Клик по картинке тоже должен зумить
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (container.id) toggleZoom(container.id);
+                });
+
+                // Вставляем <img> в начало контейнера (чтобы кнопка осталась сверху)
+                container.insertBefore(img, container.firstChild);
+            });
+        }
+
         // Карта
         let map;
         function initMap() {
